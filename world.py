@@ -72,10 +72,10 @@ class State:
 		state.taxiLocation = (x + dx, y + dy)
 
 		if action == Action.PICK:
-			state.passenger = state.passengerAtLocation(state.taxiLocation)
+			state.taxiPassenger = state.freePassenger
 
 		if action == Action.DROP and state.passenger and state.taxiLocation == state.passenger.destination:
-			state.passenger = None
+			state.taxiPassenger = None
 
 		state.freePassenger = state.passengerAtLocation(state.taxiLocation)
 
