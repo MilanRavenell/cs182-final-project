@@ -1,4 +1,5 @@
 import random
+import copy
 
 # Constants
 WIDTH = 3
@@ -72,7 +73,10 @@ class State:
 		state.taxiLocation = (x + dx, y + dy)
 
 		if action == Action.PICK:
-			state.taxiPassenger = state.freePassenger
+			state.taxiPassenger = copy.deepcopy(state.freePassenger)
+			state.freePassenger = None
+			print self.taxiPassenger
+
 
 		if action == Action.DROP and state.passenger and state.taxiLocation == state.passenger.destination:
 			state.taxiPassenger = None
@@ -80,8 +84,6 @@ class State:
 		state.freePassenger = state.passengerAtLocation(state.taxiLocation)
 
 		return state
-
-	
 
 	def getReward(self, action):
 		if action == Action.DROP and self.passenger and self.taxiLocation == self.passenger.destination:
@@ -106,7 +108,6 @@ class World:
 		self.dropoffCount = 0
 
 	def run(self):
-		print("hi")
 		self.numMoves = 0
 		
 		while self.dropoffCount < 2:
