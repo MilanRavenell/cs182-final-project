@@ -11,6 +11,7 @@ class Action:
 	SOUTH = 'South'
 	EAST = 'East'
 	WEST = 'West'
+	STAY = 'Stay'
 	PICK = 'Pick'
 	DROP = 'Drop'
 
@@ -22,11 +23,12 @@ class Action:
                PICK:  (0, 0),
                DROP:  (0, 0)}
 
-    actions_as_list = actions.items()
 
-    def actionToVector(action):
-        dx, dy =  Action.actions[action]
-        return (dx, dy)
+actions_as_list = [Action.NORTH, Action.SOUTH, Action.EAST, Action.WEST, Action.STAY, Action.PICK, Action.DROP]
+
+def actionToVector(action):
+    dx, dy =  Action.actions[action]
+    return (dx, dy)
 
 class Passenger:
 	def __init__(self, start, dest):
@@ -34,52 +36,61 @@ class Passenger:
 		self.destination = dest
 
 
-class WorldStateData:
-	def __init__(self, prev = None):
-		self.taxiLocation = None
-
-		self.score = 0
-
-		if not prev = None
-
 class State:
 	def __init__(self, prev=None, passDist=None):
-		self.taxiLocation = None
-		self.passenger = None
+		self.taxiLocation = randomLocation()
+		self.taxiPassenger = None
+		self.freePassenger = None
 		self.passengerDistribution = passDist
-		self.dropoffCount = 0
 
 		if prev:
 			self.taxiLocation = prev.taxiLocation
-			self.passenger = prev.passenger
+			self.taxiPassenger = prev.taxiPassenger
 			self.passengerDistribution = prev.passengerDistribution
-			self.dropoffCount = prev.dropoffCount
 
-	def getLegalActions(self)
+	def getLegalActions(self):
 		legalList = []
-		for action in Action.actions_as_list:
-			dx, dy = Action.actionToVector(action)
-			x , y = self.taxiLocation
-			if x + dx < WIDTH and x - dx >= 0 and y + dy < HEIGHT and y - dy >= 0:
-				legalList.append(action)
+		if self.freePassenger and not self.taxiPassenger:
+			legalList.append(Action.PICK)
+			return legalList
+
+		if self.taxiPassenger and self.taxiLocation == self.taxiPassenger.destination:
+			legalList.append(Action.DROP)
+			return legalList
+
+		for action in [Action.NORTH, Action.SOUTH, Action.EAST, Action.WEST]:
+				dx, dy = actionToVector(action)
+				x , y = self.taxiLocation
+				if x + dx < WIDTH and x + dx >= 0 and y + dy < HEIGHT and y + dy >= 0:
+					legalList.append(action)
 		return legalList
 
-	def getSuccessorState(self, action):
+	def generateSuccessor(self, action):
 		state = State(self)
 		x, y = state.taxiLocation
-		dx, dy = Action.actionToVector(action)
+		dx, dy = actionToVector(action)
 		state.taxiLocation = (x + dx, y + dy)
 
-		if action == Action.PICK 
+		if action == Action.PICK:
 			state.passenger = state.passengerAtLocation(state.taxiLocation)
 
 		if action == Action.DROP and state.passenger and state.taxiLocation == state.passenger.destination:
 			state.passenger = None
-			state.dropoffCount += 1
+
+		state.freePassenger = state.passengerAtLocation(state.taxiLocation)
 
 		return state
 
-	def passangerAtLocation(self, x, y):
+	
+
+	def getReward(self, action):
+		if action == Action.DROP and self.passenger and self.taxiLocation == self.passenger.destination:
+			return PRICE * manhattanDistance(self.passenger.startLocation, self.passenger.destination)
+		else:
+			return COST
+
+	def passengerAtLocation(self, location):
+		x, y = location
 		rand = random.random()
 		if rand < self.passengerDistribution[(x,y)]:
 			passenger = Passenger((x,y), randomDestination(x,y))
@@ -87,25 +98,24 @@ class State:
 		else:
 			return None
 
-	def getReward(self, action):
-		if action == Action.DROP and state.passenger and state.taxiLocation == state.passenger.destination:
-			return PRICE * manhattanDistance(state.passenger.startLocation, state.passenger.destination)
-		else:
-			return COST
-
 class World:
 	def __init__(self, agent):
 		self.moveHistory = []
 		self.state = State(passDist=generatePassDist())
 		self.agent = agent
+		self.dropoffCount = 0
 
 	def run(self):
+		print("hi")
 		self.numMoves = 0
-		while self.state.dropoffCount < 2:
+		
+		while self.dropoffCount < 2:
 			action = self.agent.getAction(self.state)
+			if action == Action.DROP:
+				self.dropoffCount += 1
 			self.moveHistory.append(action)
 			nextstate = self.state.generateSuccessor(action)
-			self.agent.observetransition(self.state, action, nextstate, self.state.getReward(action))
+			self.agent.observeTransition(self.state, action, nextstate, self.state.getReward(action))
 			self.state = nextstate
 
 
@@ -139,3 +149,9 @@ def randomDestination(x,y):
 def manhattanDistance( xy1, xy2 ):
     "Returns the Manhattan distance between points xy1 and xy2"
     return abs( xy1[0] - xy2[0] ) + abs( xy1[1] - xy2[1] )
+
+def randomLocation():
+	rand_x = random.randint(0,WIDTH)
+	rand_y = random.randint(0,HEIGHT)
+	return (rand_x,rand_y)
+

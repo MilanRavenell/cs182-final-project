@@ -59,7 +59,7 @@ class ReinforcementAgent(ValueEstimationAgent):
             been observed. This will result in a call to self.update
             on the same arguments
         """
-        self.episodeRewards += deltaReward
+        #self.episodeRewards += deltaReward
         self.update(state,action,nextState,deltaReward)
 
     def startEpisode(self):
