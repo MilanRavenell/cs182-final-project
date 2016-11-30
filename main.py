@@ -4,6 +4,9 @@ from qlearningAgents import TaxiAgent
 def main():
 	taxi = TaxiAgent()
 	world = World(taxi)
-	world.run()
+	for i in range(10):
+		world.run()
+		print world.getFavoredProportion()
+
 
 main()

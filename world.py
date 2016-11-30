@@ -75,10 +75,12 @@ class State:
 		state.taxiLocation = (x + dx, y + dy)
 
 		if action == Action.PICK:
+			print state.freePassenger.destination
 			state.taxiPassenger = copy.deepcopy(state.freePassenger)
 			state.freePassenger = None
 
 		if action == Action.DROP and state.taxiPassenger and state.taxiLocation == state.taxiPassenger.destination:
+			print state.taxiPassenger.destination
 			state.taxiPassenger = None
 
 		state.freePassenger = state.passengerAtLocation(state.taxiLocation)
@@ -104,31 +106,32 @@ class State:
 
 class World:
 	def __init__(self, agent):
-		self.moveHistory = []
-		self.state = State(passDist=generatePassDist())
 		self.agent = agent
-		self.dropoffCount = 0
 
 	def run(self):
-		print("hi")
+		self.moveHistory = []
+		self.state = State(passDist=generatePassDist())
 		self.numMoves = 0
+		self.favoredCount = 0
+		self.dropoffCount = 0
 		
-		while self.dropoffCount < 2:
+		while self.dropoffCount < 100:
 			action = self.agent.getAction(self.state)
-			print action
 			if action == Action.DROP:
 				self.dropoffCount += 1
+			if self.state.taxiLocation == (2,0):
+				self.favoredCount += 1
+			self.numMoves += 1
 			self.moveHistory.append(action)
 			nextstate = self.state.generateSuccessor(action)
 			self.agent.observeTransition(self.state, action, nextstate, self.state.getReward(action))
 			self.state = nextstate
 
+	def getFavoredProportion(self):
+		return float(self.favoredCount) / float(self.numMoves)
+
 
 def generatePassDist():
-	# passDist = {}
-	# for x in range(WIDTH):
-	# 	for y in range(HEIGHT):
-	# 		passDist[(x,y)] = random.random()
 	passDist = {(0,0): 0.1,
 				(0,1): 0.3,
 				(0,2): 0.5,
