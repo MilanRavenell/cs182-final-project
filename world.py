@@ -1,4 +1,5 @@
 import random
+import copy
 
 # Constants
 WIDTH = 3
@@ -47,9 +48,11 @@ class State:
 			self.taxiLocation = prev.taxiLocation
 			self.taxiPassenger = prev.taxiPassenger
 			self.passengerDistribution = prev.passengerDistribution
+			self.freePassenger = prev.freePassenger
 
 	def getLegalActions(self):
 		legalList = []
+
 		if self.freePassenger and not self.taxiPassenger:
 			legalList.append(Action.PICK)
 			return legalList
@@ -72,9 +75,10 @@ class State:
 		state.taxiLocation = (x + dx, y + dy)
 
 		if action == Action.PICK:
-			state.taxiPassenger = state.freePassenger
+			state.taxiPassenger = copy.deepcopy(state.freePassenger)
+			state.freePassenger = None
 
-		if action == Action.DROP and state.passenger and state.taxiLocation == state.passenger.destination:
+		if action == Action.DROP and state.taxiPassenger and state.taxiLocation == state.taxiPassenger.destination:
 			state.taxiPassenger = None
 
 		state.freePassenger = state.passengerAtLocation(state.taxiLocation)
@@ -84,8 +88,8 @@ class State:
 	
 
 	def getReward(self, action):
-		if action == Action.DROP and self.passenger and self.taxiLocation == self.passenger.destination:
-			return PRICE * manhattanDistance(self.passenger.startLocation, self.passenger.destination)
+		if action == Action.DROP and self.taxiPassenger and self.taxiLocation == self.taxiPassenger.destination:
+			return PRICE * manhattanDistance(self.taxiPassenger.startLocation, self.taxiPassenger.destination)
 		else:
 			return COST
 
@@ -111,6 +115,7 @@ class World:
 		
 		while self.dropoffCount < 2:
 			action = self.agent.getAction(self.state)
+			print action
 			if action == Action.DROP:
 				self.dropoffCount += 1
 			self.moveHistory.append(action)

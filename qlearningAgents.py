@@ -14,7 +14,6 @@ class QLearningAgent(ReinforcementAgent):
         return self.qvalues[(state, action)]
 
     def computeValueFromQValues(self, state):
-        print self.getLegalActions(state)
         if len(self.getLegalActions(state)) == 0:
           return 0.0
 
