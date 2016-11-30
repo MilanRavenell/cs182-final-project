@@ -14,7 +14,6 @@ class QLearningAgent(ReinforcementAgent):
         return self.qvalues[(state, action)]
 
     def computeValueFromQValues(self, state):
-        #print self.getLegalActions(state)
         if len(self.getLegalActions(state)) == 0:
           return 0.0
 
@@ -58,7 +57,6 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         self.qvalues[(state, action)] = (1 - self.alpha) * self.getQValue(state, action) + (self.alpha) * (reward + (self.discount * self.computeValueFromQValues(nextState)))
-        #*********
     
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
