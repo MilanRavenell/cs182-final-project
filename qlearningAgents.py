@@ -57,8 +57,6 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         self.qvalues[(state.taxiLocation, state.destination, action)] = (1 - self.alpha) * self.getQValue(state, action) + (self.alpha) * (reward + (self.discount * self.computeValueFromQValues(nextState)))
-        #*********
-    
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
 

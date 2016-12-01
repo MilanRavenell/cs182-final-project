@@ -89,8 +89,6 @@ class State:
 
 		return state
 
-	
-
 	def getReward(self, action):
 		if action == Action.DROP and self.taxiPassenger and self.taxiLocation == self.taxiPassenger.destination:
 			return PRICE * manhattanDistance(self.taxiPassenger.startLocation, self.taxiPassenger.destination)
