@@ -4,7 +4,7 @@ import copy
 # Constants
 WIDTH = 3
 HEIGHT = 3
-PRICE = 1
+PRICE = 100
 COST = -1
 
 class Action:
@@ -43,12 +43,14 @@ class State:
 		self.taxiPassenger = None
 		self.freePassenger = None
 		self.passengerDistribution = passDist
+		self.destination = None
 
 		if prev:
 			self.taxiLocation = prev.taxiLocation
 			self.taxiPassenger = prev.taxiPassenger
 			self.passengerDistribution = prev.passengerDistribution
 			self.freePassenger = prev.freePassenger
+			self.destination = prev.destination
 
 	def getLegalActions(self):
 		legalList = []
@@ -75,12 +77,12 @@ class State:
 		state.taxiLocation = (x + dx, y + dy)
 
 		if action == Action.PICK:
-			print state.freePassenger.destination
 			state.taxiPassenger = copy.deepcopy(state.freePassenger)
+			state.destination = state.taxiPassenger.destination
 			state.freePassenger = None
 
 		if action == Action.DROP and state.taxiPassenger and state.taxiLocation == state.taxiPassenger.destination:
-			print state.taxiPassenger.destination
+			state.destination = None
 			state.taxiPassenger = None
 
 		state.freePassenger = state.passengerAtLocation(state.taxiLocation)
@@ -115,7 +117,7 @@ class World:
 		self.favoredCount = 0
 		self.dropoffCount = 0
 		
-		while self.dropoffCount < 100:
+		while self.dropoffCount < 1000:
 			action = self.agent.getAction(self.state)
 			if action == Action.DROP:
 				self.dropoffCount += 1
@@ -144,13 +146,13 @@ def generatePassDist():
 	return passDist
 
 def randomDestination(x,y):
-	rand_x = random.randint(0,WIDTH)
+	rand_x = random.randint(0,WIDTH-1)
 	while rand_x == x:
-		rand_x = random.randint(0,WIDTH)
+		rand_x = random.randint(0,WIDTH-1)
 
-	rand_y = random.randint(0,HEIGHT)
+	rand_y = random.randint(0,HEIGHT-1)
 	while rand_y == y:
-		rand_y = random.randint(0,HEIGHT)
+		rand_y = random.randint(0,HEIGHT-1)
 
 	return (x,y)
 
@@ -159,7 +161,7 @@ def manhattanDistance( xy1, xy2 ):
     return abs( xy1[0] - xy2[0] ) + abs( xy1[1] - xy2[1] )
 
 def randomLocation():
-	rand_x = random.randint(0,WIDTH)
-	rand_y = random.randint(0,HEIGHT)
+	rand_x = random.randint(0,WIDTH-1)
+	rand_y = random.randint(0,HEIGHT-1)
 	return (rand_x,rand_y)
 
