@@ -1,6 +1,15 @@
 import util
 from graphicsUtils import *
 import itertools
+from world import Action 
+
+def actionToVector(action):
+    dx, dy =  Action.actions[action]
+    return (dx, dy)
+
+
+WIDTH = 3
+HEIGHT = 3
 
 class Grid:
     """
@@ -135,6 +144,7 @@ class GraphicsGridworldDisplay:
         states = self.gridworld.getStates()
         for state in states:
             for action in self.gridworld.getPossibleActions(state):
+                print state
                 qValues[(state, action)] = agent.getQValue(state, action)
         drawQValues(self.gridworld, qValues, currentState, message)
         sleep(0.05 / self.speed)

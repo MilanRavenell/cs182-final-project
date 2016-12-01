@@ -34,6 +34,7 @@ def main():
 	taxi = TaxiAgent()
 	world = World(taxi)
 	state = (world.state.taxiLocation, world.state.destination, world.state.freePassenger)
+	print state
 	displayCallback = lambda state: display.displayQValues(taxi, state, "CURRENT Q-VALUES")
     # for i in range(10):
 	#	world.run()

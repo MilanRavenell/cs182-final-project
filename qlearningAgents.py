@@ -4,6 +4,8 @@ from learningAgents import ReinforcementAgent
 
 import random,util,math
 
+
+
 class QLearningAgent(ReinforcementAgent):
     
     def __init__(self, **args):
@@ -11,7 +13,7 @@ class QLearningAgent(ReinforcementAgent):
         self.qvalues = util.Counter()
 
     def getQValue(self, state, action):
-        return self.qvalues[(state.taxiLocation, state.destination, action)]
+        return self.qvalues[(state, action)]
 
     def computeValueFromQValues(self, state):
         if len(self.getLegalActions(state)) == 0:
