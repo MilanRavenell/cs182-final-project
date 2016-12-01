@@ -107,6 +107,7 @@ class State:
 class World:
 	def __init__(self, agent):
 		self.agent = agent
+		self.state = State(passDist=generatePassDist())
 
 	def run(self):
 		self.moveHistory = []

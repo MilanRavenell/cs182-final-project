@@ -1,5 +1,6 @@
 import util
 from graphicsUtils import *
+import itertools
 
 class Grid:
     """
@@ -77,7 +78,23 @@ class GridWorld():
         that "exit" states transition to the terminal
         state under the special action "done".
         """
-        return state.getLegalActions()
+        taxi, passenger, isFree = state
+        legalList = []
+
+        if isFree and not passenger:
+            legalList.append('Pick')
+            return legalList
+
+        if passenger and taxi == passenger:
+            legalList.append('Drop')
+            return legalList
+
+        for action in ['North', 'South', 'East', 'West']:
+                dx, dy = actionToVector(action)
+                x , y = taxi
+                if x + dx < WIDTH and x + dx >= 0 and y + dy < HEIGHT and y + dy >= 0:
+                    legalList.append(action)
+        return legalList
 
     def getStates(self):
         """
@@ -86,7 +103,8 @@ class GridWorld():
         states = []
         a = [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)]
         b = [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2), None]
-        for r in itertools.product(a, b):
+        c = [True, False]
+        for r in itertools.product(a, b, c):
             states.append(r)
         return states
 
