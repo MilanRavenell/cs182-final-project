@@ -115,7 +115,7 @@ class World:
 		self.favoredCount = 0
 		self.dropoffCount = 0
 		
-		while self.dropoffCount < 1000:
+		while self.dropoffCount < 10000:
 			action = self.agent.getAction(self.state)
 			if action == Action.DROP:
 				self.dropoffCount += 1
@@ -152,7 +152,7 @@ def randomDestination(x,y):
 	while rand_y == y:
 		rand_y = random.randint(0,HEIGHT-1)
 
-	return (x,y)
+	return (rand_x,rand_y)
 
 def manhattanDistance( xy1, xy2 ):
     "Returns the Manhattan distance between points xy1 and xy2"
