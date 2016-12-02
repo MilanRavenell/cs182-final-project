@@ -274,7 +274,7 @@ def drawSquareQ(x, y, qVals, minVal, maxVal, valStrs, bestActions, isCurrent):
             #polygon( (center, ne, se), wedge_color, filled = 1, smooth = 0)
             text(e, text_color, valStr, "Courier", h, "bold", "e")
         if action == 'west':
-            #polygon( (center, nw, sw), wedge_color, filled = 1, smooth = 0)
+            #polygon( (center, nw, sw), wedge_c209olor, filled = 1, smooth = 0)
             text(w, text_color, valStr, "Courier", h, "bold", "w")
 
 def drawValues(gridworld, values, policy, currentState = None, message = 'State Values'):
