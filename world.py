@@ -4,7 +4,7 @@ import copy
 # Constants
 WIDTH = 3
 HEIGHT = 3
-PRICE = 100
+PRICE = 1
 COST = -1
 
 class Action:
@@ -102,6 +102,8 @@ class State:
 	def getReward(self, action):
 		if action == Action.DROP and self.taxiPassenger and self.taxiLocation == self.taxiPassenger.destination:
 			return PRICE * manhattanDistance(self.taxiPassenger.startLocation, self.taxiPassenger.destination)
+		elif self.taxiPassenger:
+			return 1 / float(manhattanDistance(self.taxiLocation, self.taxiPassenger.destination)) * 4
 		else:
 			return COST
 
