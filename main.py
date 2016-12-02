@@ -33,17 +33,11 @@ def runEpisode(agent, environment, display):
 def main():
 	taxi = TaxiAgent()
 	world = World(taxi)
-	state = (world.state.taxiLocation, world.state.destination, world.state.freePassenger)
-	displayCallback = lambda state: display.displayQValues(taxi, state, "CURRENT Q-VALUES")
-    # for i in range(10):
-	#	world.run()
-	#	print world.getFavoredProportion()
-	# for i in taxi.qvalues.keys():
-	# 	print str(i) +': ' + str(taxi.qvalues[i])
-	grid = [[' ',' ',' ',' ',], [' ',' ',' ',' ',], [' ',' ',' ',' ',], [' ',' ',' ',' ',]]
-	gridworld = GridWorld(grid)
-	display = GraphicsGridworldDisplay(gridworld, 100, 0)
-	display.start()
-	runEpisode(taxi, world, displayCallback)
+	for i in range(10):
+		world.run()
+		print world.getFavoredProportion()
+	for i in taxi.qvalues.keys():
+		print str(i) + ": " + str(taxi.qvalues[i])
+
 
 main()

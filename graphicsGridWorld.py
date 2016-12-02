@@ -1,6 +1,15 @@
 import util
 from graphicsUtils import *
 import itertools
+from world import Action 
+
+def actionToVector(action):
+    dx, dy =  Action.actions[action]
+    return (dx, dy)
+
+
+WIDTH = 3
+HEIGHT = 3
 
 class Grid:
     """
@@ -78,6 +87,7 @@ class GridWorld():
         that "exit" states transition to the terminal
         state under the special action "done".
         """
+        # print "STATE IS" + str(state)
         taxi, passenger, isFree = state
         legalList = []
 
@@ -135,6 +145,7 @@ class GraphicsGridworldDisplay:
         states = self.gridworld.getStates()
         for state in states:
             for action in self.gridworld.getPossibleActions(state):
+                #print state
                 qValues[(state, action)] = agent.getQValue(state, action)
         drawQValues(self.gridworld, qValues, currentState, message)
         sleep(0.05 / self.speed)
@@ -314,7 +325,7 @@ def drawQValues(gridworld, qValues, currentState = None, message = 'State-Action
     maxValue = max(qValueList)
     for x in range(grid.width):
         for y in range(grid.height):
-            state = (x, y)
+            state = (x, y) 
             gridType = grid[x][y]
             isExit = (str(gridType) != gridType)
             isCurrent = (currentState == state)

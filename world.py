@@ -44,6 +44,7 @@ class State:
 		self.freePassenger = None
 		self.passengerDistribution = passDist
 		self.destination = None
+		self.hasPassenger = False
 
 		if prev:
 			self.taxiLocation = prev.taxiLocation
@@ -51,14 +52,17 @@ class State:
 			self.passengerDistribution = prev.passengerDistribution
 			self.freePassenger = prev.freePassenger
 			self.destination = prev.destination
+			self.hasPassenger = prev.hasPassenger
 
 	def getLegalActions(self):
 		legalList = []
 
+		# if passeger is at grid location, TaxiAgent's action should be PICK UP
 		if self.freePassenger and not self.taxiPassenger:
 			legalList.append(Action.PICK)
 			return legalList
 
+		# if taxi is at destination location, TaxiAgent's action should be DROP OFF
 		if self.taxiPassenger and self.taxiLocation == self.taxiPassenger.destination:
 			legalList.append(Action.DROP)
 			return legalList
@@ -76,16 +80,22 @@ class State:
 		dx, dy = actionToVector(action)
 		state.taxiLocation = (x + dx, y + dy)
 
+		# if Taxi picks up free passenger, assign freePassenger to taxiPassenger
 		if action == Action.PICK:
 			state.taxiPassenger = copy.deepcopy(state.freePassenger)
 			state.destination = state.taxiPassenger.destination
 			state.freePassenger = None
+			state.hasPassenger = False
 
 		if action == Action.DROP and state.taxiPassenger and state.taxiLocation == state.taxiPassenger.destination:
 			state.destination = None
 			state.taxiPassenger = None
 
 		state.freePassenger = state.passengerAtLocation(state.taxiLocation)
+		if state.freePassenger:
+			state.hasPassenger = True
+		else:
+			state.hasPassenger = False
 
 		return state
 

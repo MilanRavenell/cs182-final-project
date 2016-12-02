@@ -11,7 +11,8 @@ class QLearningAgent(ReinforcementAgent):
         self.qvalues = util.Counter()
 
     def getQValue(self, state, action):
-        return self.qvalues[(state.taxiLocation, state.destination, action)]
+        the_state = (state.taxiLocation, state.destination, state.hasPassenger)
+        return self.qvalues[(the_state, action)]
 
     def computeValueFromQValues(self, state):
         if len(self.getLegalActions(state)) == 0:
@@ -56,7 +57,9 @@ class QLearningAgent(ReinforcementAgent):
           NOTE: You should never call this function,
           it will be called on your behalf
         """
-        self.qvalues[(state.taxiLocation, state.destination, action)] = (1 - self.alpha) * self.getQValue(state, action) + (self.alpha) * (reward + (self.discount * self.computeValueFromQValues(nextState)))
+        the_state = (state.taxiLocation, state.destination, state.hasPassenger)
+        self.qvalues[(the_state, action)] = (1 - self.alpha) * self.getQValue(state, action) + (self.alpha) * (reward + (self.discount * self.computeValueFromQValues(nextState)))
+    
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
 
@@ -70,7 +73,7 @@ class TaxiAgent(QLearningAgent):
         args['gamma'] = gamma
         args['alpha'] = alpha
         args['numTraining'] = numTraining
-        self.location = None #random
+        self.location = None 
         self.hasPassenger = False 
         self.passenger_destination = None
         QLearningAgent.__init__(self, **args)
