@@ -1,6 +1,7 @@
 
-import world
+from world import World, Action
 from learningAgents import ReinforcementAgent
+import itertools
 
 import random,util,math
 
@@ -9,6 +10,11 @@ class QLearningAgent(ReinforcementAgent):
     def __init__(self, **args):
         ReinforcementAgent.__init__(self, **args)
         self.qvalues = util.Counter()
+        a = [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)]
+        for loc in a:
+          self.qvalues[(loc, None, True), 'Pick'] = float("inf")
+          self.qvalues[(loc, loc, True), 'Drop'] = float("inf")
+          self.qvalues[(loc, loc, False), 'Drop'] = float("inf")
 
     def getQValue(self, state, action):
         the_state = (state.taxiLocation, state.destination, state.hasPassenger)
@@ -66,6 +72,22 @@ class QLearningAgent(ReinforcementAgent):
     def getValue(self, state):
         return self.computeValueFromQValues(state)
 
+    def findPolicies(self):
+        actions_as_list = [Action.NORTH, Action.SOUTH, Action.EAST, Action.WEST, Action.STAY, Action.PICK, Action.DROP]
+        states = []
+        a = [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)]
+        b = [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2), None]
+        c = [True, False]
+        policies = {}
+        for state in itertools.product(a, b, c):
+          max_val = -float("inf")
+          max_action = None 
+          for action in actions_as_list:
+            if self.qvalues[(state,action)] > max_val:
+              max_val = self.qvalues[(state,action)]
+              max_action = action
+          policies[state] = max_action
+        return policies
 
 class TaxiAgent(QLearningAgent):
     def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0, **args):

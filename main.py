@@ -1,4 +1,4 @@
-from world import World
+from world import World, Action
 from qlearningAgents import TaxiAgent 
 from graphicsGridWorld import GraphicsGridworldDisplay, GridWorld
 
@@ -36,8 +36,11 @@ def main():
 	for i in range(10):
 		world.run()
 		#print world.getFavoredProportion()
-	for i in taxi.qvalues.keys():
-		print str(i) + ": " + str(taxi.qvalues[i])
+	policies = taxi.findPolicies()
+	for i in policies.keys():
+		#print str(i) + ": " + str(taxi.qvalues[i])
+		#print str(i) + ": " + str(taxi.getPolicy(i))
+		print str(i) + ": " + str(policies[i])
 
 
 main()
