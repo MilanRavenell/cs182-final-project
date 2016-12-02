@@ -35,7 +35,7 @@ def main():
 	world = World(taxi)
 	for i in range(10):
 		world.run()
-		print world.getFavoredProportion()
+		print world.cruiseTime
 	for i in taxi.qvalues.keys():
 		print str(i) + ": " + str(taxi.qvalues[i])
 

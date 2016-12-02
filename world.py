@@ -4,7 +4,7 @@ import copy
 # Constants
 WIDTH = 3
 HEIGHT = 3
-PRICE = 100
+PRICE = 1
 COST = -1
 
 class Action:
@@ -102,6 +102,8 @@ class State:
 	def getReward(self, action):
 		if action == Action.DROP and self.taxiPassenger and self.taxiLocation == self.taxiPassenger.destination:
 			return PRICE * manhattanDistance(self.taxiPassenger.startLocation, self.taxiPassenger.destination)
+		elif self.taxiPassenger:
+			return 1 / float(manhattanDistance(self.taxiLocation, self.taxiPassenger.destination)) * 4
 		else:
 			return COST
 
@@ -120,6 +122,7 @@ class World:
 		self.state = State(passDist=generatePassDist())
 
 	def run(self):
+		self.cruiseTime = 0
 		self.moveHistory = []
 		self.state = State(passDist=generatePassDist())
 		self.numMoves = 0
@@ -137,6 +140,8 @@ class World:
 			nextstate = self.state.generateSuccessor(action)
 			self.agent.observeTransition(self.state, action, nextstate, self.state.getReward(action))
 			self.state = nextstate
+			if not self.state.taxiPassenger:
+				self.cruiseTime += 1
 
 	def getFavoredProportion(self):
 		return float(self.favoredCount) / float(self.numMoves)
