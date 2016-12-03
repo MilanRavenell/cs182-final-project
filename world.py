@@ -4,7 +4,7 @@ import copy
 # Constants
 WIDTH = 3
 HEIGHT = 3
-PRICE = 1
+PRICE = 3
 COST = -1
 
 class Action:
@@ -56,16 +56,15 @@ class State:
 
 	def getLegalActions(self):
 		legalList = []
-
 		# if passeger is at grid location, TaxiAgent's action should be PICK UP
 		if self.freePassenger and not self.taxiPassenger:
-			legalList.append(Action.PICK)
-			return legalList
+		    legalList.append(Action.PICK)
+		    return legalList
 
 		# if taxi is at destination location, TaxiAgent's action should be DROP OFF
 		if self.taxiPassenger and self.taxiLocation == self.taxiPassenger.destination:
-			legalList.append(Action.DROP)
-			return legalList
+		    legalList.append(Action.DROP)
+		    return legalList
 
 		for action in [Action.NORTH, Action.SOUTH, Action.EAST, Action.WEST]:
 				dx, dy = actionToVector(action)
@@ -73,6 +72,8 @@ class State:
 				if x + dx < WIDTH and x + dx >= 0 and y + dy < HEIGHT and y + dy >= 0:
 					legalList.append(action)
 		return legalList
+
+
 
 	def generateSuccessor(self, action):
 		state = State(self)
@@ -103,7 +104,7 @@ class State:
 		if action == Action.DROP and self.taxiPassenger and self.taxiLocation == self.taxiPassenger.destination:
 			return PRICE * manhattanDistance(self.taxiPassenger.startLocation, self.taxiPassenger.destination)
 		elif self.taxiPassenger:
-			return 1 / float(manhattanDistance(self.taxiLocation, self.taxiPassenger.destination)) * 4
+			return (1 / float(manhattanDistance(self.taxiLocation, self.taxiPassenger.destination)))
 		else:
 			return COST
 
