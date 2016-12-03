@@ -1,6 +1,6 @@
 from world import World, Action
 from qlearningAgents import TaxiAgent 
-from graphicsGridWorld import GraphicsGridworldDisplay, GridWorld
+import os
 
 def runEpisode(agent, environment, display):
     dropoffCount = 0
@@ -33,6 +33,7 @@ def runEpisode(agent, environment, display):
 def main():
 	taxi = TaxiAgent()
 	world = World(taxi)
+	os.system('clear')
 	for i in range(10):
 		world.run()
 		#print world.getFavoredProportion()

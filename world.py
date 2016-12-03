@@ -1,5 +1,7 @@
 import random
 import copy
+import os
+import time
 
 # Constants
 WIDTH = 3
@@ -30,6 +32,43 @@ actions_as_list = [Action.NORTH, Action.SOUTH, Action.EAST, Action.WEST, Action.
 def actionToVector(action):
     dx, dy =  Action.actions[action]
     return (dx, dy)
+
+def print_grid(taxiloc, destination, hasPassenger):
+    """
+    Print the grid of boxes.
+    """
+    pos = [' '] * 27
+    hash_function = {}
+    hash_function[(0,0)] = 0
+    hash_function[(1,0)] = 1
+    hash_function[(2,0)] = 2
+    hash_function[(0,1)] = 3
+    hash_function[(1,1)] = 4
+    hash_function[(2,1)] = 5
+    hash_function[(0,2)] = 6
+    hash_function[(1,2)] = 7
+    hash_function[(2,2)] = 8
+
+    
+    if taxiloc:
+        pos[hash_function[taxiloc]] = 'T'
+    if taxiloc and destination:
+        pos[hash_function[taxiloc]] = 'T*'
+    if destination:
+        pos[hash_function[destination] + 18] = 'D'
+    if hasPassenger:
+        pos[hash_function[taxiloc] + 9] = 'P'
+    
+
+    print "___________________"
+    print "|%s %s %s|%s %s %s|%s %s %s|" % (pos[6], pos[15], pos[24], pos[7], pos[16], pos[25], pos[8], pos[17], pos[26])
+    print "___________________"
+    print "|%s %s %s|%s %s %s|%s %s %s|" % (pos[3], pos[12], pos[21], pos[4], pos[13], pos[22], pos[5], pos[14], pos[23])
+    print "___________________"
+    print "|%s %s %s|%s %s %s|%s %s %s|" % (pos[0], pos[9], pos[18], pos[1], pos[10], pos[19], pos[2], pos[11], pos[20])
+    print "___________________"
+
+
 
 class Passenger:
 	def __init__(self, start, dest):
@@ -72,8 +111,6 @@ class State:
 				if x + dx < WIDTH and x + dx >= 0 and y + dy < HEIGHT and y + dy >= 0:
 					legalList.append(action)
 		return legalList
-
-
 
 	def generateSuccessor(self, action):
 		state = State(self)
@@ -130,6 +167,11 @@ class World:
 		self.dropoffCount = 0
 		
 		while self.dropoffCount < 10000:
+			# NEW CODE
+			print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
+			time.sleep(1.5)
+			os.system('clear')
+
 			action = self.agent.getAction(self.state)
 			if action == Action.DROP:
 				self.dropoffCount += 1

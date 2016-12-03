@@ -1,6 +1,5 @@
 
 import world
-
 import random,util,time
 
 class Agent:
