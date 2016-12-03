@@ -1,6 +1,7 @@
 from world import World, Action
 from qlearningAgents import TaxiAgent 
 import os
+from naiveAgents import *
 
 def runEpisode(agent, environment, display):
     dropoffCount = 0
@@ -34,22 +35,6 @@ def main():
 	taxi = TaxiAgent()
 	world = World(taxi)
 	os.system('clear')
-	for i in range(10):
-		world.run()
-		#print world.getFavoredProportion()
-		#policies = taxi.findPolicies()
-		# for i in policies.keys():
-		# 	a, b , c = i
-		# 	if a == (1,0):
-		# 		print str(i) + ": " + str(policies[i])
-		# print('')
-		for i in taxi.qvalues.keys():
-				a, b = i
-				if a[0] == (1,1) and a[1] == (2,2):
-					print str(i) + ": " + str(taxi.qvalues[i])
-		print "cruise time: " + str(float(world.cruiseTime) / float(world.numMoves))
-		print('')
-	
-#def print_policy_grid(policies, location)
+	world.run()
 
 main()

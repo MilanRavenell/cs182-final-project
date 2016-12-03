@@ -167,11 +167,23 @@ class World:
 		self.favoredCount = 0
 		self.dropoffCount = 0
 		
-		while self.dropoffCount < 10000:
+		while True:
 			# NEW CODE
-			print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
-			time.sleep(1.5)
-			os.system('clear')
+			#if (self.agent.isConverged):
+			if (self.dropoffCount > 10000):
+				print self.dropoffCount
+				print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
+				time.sleep(1.5)
+				os.system('clear')
+
+				# print out the qvalues of a particular state
+
+				# for i in self.agent.qvalues.keys():
+				# 		a, b = i
+				# 		if a[0] == self.state.taxiLocation and a[1] == self.state.destination:
+				# 			print  str(i) + ": " + str(self.agent.qvalues[i])
+				print self.agent.qvalues
+				print "cruise time: " + str(float(self.cruiseTime) / float(self.numMoves))
 
 			action = self.agent.getAction(self.state)
 			if action == Action.DROP:
@@ -185,6 +197,15 @@ class World:
 			self.state = nextstate
 			if not self.state.taxiPassenger:
 				self.cruiseTime += 1
+
+			# Evaluation function of cruistime proportion
+			
+			# if self.numMoves % 1000 == 0:
+			# 	#print self.cruiseTime
+			# 	print "cruise time: " + str(float(self.cruiseTime) / float(1000))
+			# 	self.cruiseTime = 0
+
+
 
 	def getFavoredProportion(self):
 		return float(self.favoredCount) / float(self.numMoves)

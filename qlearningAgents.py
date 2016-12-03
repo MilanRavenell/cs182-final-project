@@ -2,6 +2,7 @@
 from world import *
 from learningAgents import ReinforcementAgent
 import itertools
+import copy
 
 import random,util,math
 
@@ -10,11 +11,8 @@ class QLearningAgent(ReinforcementAgent):
     def __init__(self, **args):
         ReinforcementAgent.__init__(self, **args)
         self.qvalues = util.Counter()
-        # a = [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)]
-        # for loc in a:
-        #   self.qvalues[(loc, None, True), 'Pick'] = float("inf")
-        #   self.qvalues[(loc, loc, True), 'Drop'] = float("inf")
-        #   self.qvalues[(loc, loc, False), 'Drop'] = float("inf")
+        self.prev_qvalues = util.Counter()
+        self.isConverged = False
 
     def getQValue(self, state, action):
         the_state = (state.taxiLocation, state.destination, state.hasPassenger)
@@ -63,9 +61,11 @@ class QLearningAgent(ReinforcementAgent):
           NOTE: You should never call this function,
           it will be called on your behalf
         """
+        self.prev_qvalues = copy.copy(self.qvalues)
         the_state = (state.taxiLocation, state.destination, state.hasPassenger)
         self.qvalues[(the_state, action)] = (1 - self.alpha) * self.getQValue(state, action) + (self.alpha) * (reward + (self.discount * self.computeValueFromQValues(nextState)))
-    
+        self.converges(0)
+
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
 
@@ -73,8 +73,6 @@ class QLearningAgent(ReinforcementAgent):
         return self.computeValueFromQValues(state)
 
     def findPolicies(self):
-        actions_as_list = [Action.NORTH, Action.SOUTH, Action.EAST, Action.WEST, Action.STAY, Action.PICK, Action.DROP]
-        states = []
         a = [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)]
         b = [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2), None]
         c = [True, False]
@@ -102,6 +100,14 @@ class QLearningAgent(ReinforcementAgent):
               max_action = action
           policies[state_data] = max_action
         return policies
+
+    def converges(self, error):
+      for key in self.qvalues.keys():
+        if abs(self.qvalues[key] - self.prev_qvalues[key]) > error:
+          self.isConverged = False
+          return
+      self.isConverged = True
+
 
 class TaxiAgent(QLearningAgent):
     def __init__(self, epsilon=0.01,gamma=0.8,alpha=0.6, numTraining=0, **args):
