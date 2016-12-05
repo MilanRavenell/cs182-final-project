@@ -176,19 +176,20 @@ class World:
 
 		while True:
 			#if (self.agent.isConverged):
-			if (self.dropoffCount > 10000):
+			if (self.dropoffCount > 0):
+				print self.numMoves
 				print self.dropoffCount
 				print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
-				time.sleep(1.5)
+				#time.sleep(1.5)
 				os.system('clear')
 
 				# print out the qvalues of a particular state
 
-				policies = self.agent.findPolicies()
-				for i in policies.keys():
-						a, b, c = i
-						if b == None and c == False:
-							print  str(a) + ": " + str(policies[i])
+				# policies = self.agent.findPolicies()
+				# for i in policies.keys():
+				# 		a, b, c = i
+				# 		if b == None and c == False:
+				# 			print  str(a) + ": " + str(policies[i])
 				#print self.agent.qvalues
 				
 
