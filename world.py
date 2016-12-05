@@ -166,9 +166,14 @@ class World:
 		self.numMoves = 0
 		self.favoredCount = 0
 		self.dropoffCount = 0
-		
+
+		self.pick_up_count = 0
+		self.total_drop_offs = 0
+		self.drop_off_steps = 0
+		self.move_to_higher_location = 0
+		self.num_no_passenger_moves = 0
+
 		while True:
-			# NEW CODE
 			#if (self.agent.isConverged):
 			if (self.dropoffCount > 10000):
 				print self.dropoffCount
@@ -182,21 +187,54 @@ class World:
 				# 		a, b = i
 				# 		if a[0] == self.state.taxiLocation and a[1] == self.state.destination:
 				# 			print  str(i) + ": " + str(self.agent.qvalues[i])
-				print self.agent.qvalues
+				# print self.agent.qvalues
 				print "cruise time: " + str(float(self.cruiseTime) / float(self.numMoves))
+				
+
+				if self.pick_up_count >= 1:
+					print "avg_drop_off_time:" + str(float(self.total_drop_offs) / float(self.pick_up_count))
+				if self.pick_up_count >= 1:
+					print "propotion move to higher:" + str(float(self.move_to_higher_location) / float(self.num_no_passenger_moves))
+				  
+
 
 			action = self.agent.getAction(self.state)
+			
+			# NEW
+			if self.dropoffCount > 10000:
+
+				if not self.state.taxiPassenger: 
+					self.num_no_passenger_moves += 1
+					if moved_to_higher(self.state.taxiLocation, action):
+						self.move_to_higher_location += 1
+
+				# calculating avg drop_off time 
+				self.drop_off_steps += 1
+				if action == Action.PICK:
+					self.drop_off_steps = 0
+					self.pick_up_count += 1
+				if action == Action.DROP:
+					self.total_drop_offs += self.drop_off_steps
+					self.drop_off_steps = 0
+
+			
 			if action == Action.DROP:
 				self.dropoffCount += 1
+				
 			if self.state.taxiLocation == (2,0):
 				self.favoredCount += 1
+			
 			self.numMoves += 1
 			self.moveHistory.append(action)
+			
+			# successor function 
 			nextstate = self.state.generateSuccessor(action)
 			self.agent.observeTransition(self.state, action, nextstate, self.state.getReward(action))
 			self.state = nextstate
+			
 			if not self.state.taxiPassenger:
 				self.cruiseTime += 1
+
 
 			# Evaluation function of cruistime proportion
 			
@@ -209,6 +247,30 @@ class World:
 
 	def getFavoredProportion(self):
 		return float(self.favoredCount) / float(self.numMoves)
+
+# NEW
+def moved_to_higher(loc, action):
+	curr_val = passenger_dist[loc]
+	dx, dy = actionToVector(action)	
+	new_val = passenger_dist[(loc[0] + dx, loc[1] + dy)]
+	print curr_val
+	print action
+	print new_val
+	if new_val > curr_val:
+		return True
+	else: 
+		return False 
+
+
+passenger_dist = {(0,0): 0.1,
+				(0,1): 0.3,
+				(0,2): 0.5,
+				(1,0): 0.1,
+				(1,1): 0.3,
+				(1,2): 0.4,
+				(2,0): 0.7,
+				(2,1): 0.1,
+				(2,2): 0.2}
 
 
 def generatePassDist():
@@ -242,4 +304,6 @@ def randomLocation():
 	rand_x = random.randint(0,WIDTH-1)
 	rand_y = random.randint(0,HEIGHT-1)
 	return (rand_x,rand_y)
+
+
 
