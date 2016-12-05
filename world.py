@@ -199,6 +199,7 @@ class World:
 		self.drop_off_steps = 0
 		self.move_to_higher_location = 0
 		self.num_no_passenger_moves = 0
+		self.numMovesAfter10000 = 0
 
 		while True:
 			#if (self.agent.isConverged):
@@ -208,19 +209,17 @@ class World:
 				time.sleep(1.5)
 				os.system('clear')
 
-				# print out the qvalues of a particular state
-
-				# for i in self.agent.qvalues.keys():
-				# 		a, b = i
-				# 		if a[0] == self.state.taxiLocation and a[1] == self.state.destination:
-				# 			print  str(i) + ": " + str(self.agent.qvalues[i])
-				# print self.agent.qvalues
-
-				# METRICS for evaluation 
-				print "cruise time: " + str(float(self.cruiseTime) / float(self.numMoves))
+				policies = self.agent.findPolicies()
+				for i in policies.keys():
+						a, b, c = i
+						if b == None and c == False:
+							print  str(a) + ": " + str(policies[i])
+				
+				if self.numMovesAfter10000 >= 1:
+					print "cruise time: " + str(float(self.cruiseTime) / float(self.numMovesAfter10000))
 				if self.pick_up_count >= 1:
 					print "avg_drop_off_time:" + str(float(self.total_drop_offs) / float(self.pick_up_count))
-				if self.pick_up_count >= 1:
+				if self.num_no_passenger_moves >= 1:
 					print "propotion move to higher:" + str(float(self.move_to_higher_location) / float(self.num_no_passenger_moves))
 				  
 
@@ -229,11 +228,11 @@ class World:
 			
 			# NEW
 			if self.dropoffCount > 10000:
-
-
 				# calculating proportion of time agent moves to a higher state when taxi doesn't have passenger 
 				# = self.move_to_higher_location / self.num_no_passenger_moves 
+				self.numMovesAfter10000 += 1
 				if not self.state.taxiPassenger: 
+					self.cruiseTime += 1
 					self.num_no_passenger_moves += 1
 					if moved_to_higher(self.state.taxiLocation, action):
 						self.move_to_higher_location += 1
@@ -262,9 +261,6 @@ class World:
 			nextstate = self.state.generateSuccessor(action)
 			self.agent.observeTransition(self.state, action, nextstate, self.state.getReward(action))
 			self.state = nextstate
-			
-			if not self.state.taxiPassenger:
-				self.cruiseTime += 1
 
 	def getFavoredProportion(self):
 		return float(self.favoredCount) / float(self.numMoves)
