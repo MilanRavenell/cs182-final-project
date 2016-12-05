@@ -33,6 +33,33 @@ def actionToVector(action):
     dx, dy =  Action.actions[action]
     return (dx, dy)
 
+def proportion_grid(proportion_table, action_table):
+	pos = [' '] * 27
+    
+    hash_function = {}
+    hash_function[(0,0)] = 0
+    hash_function[(1,0)] = 1
+    hash_function[(2,0)] = 2
+    hash_function[(0,1)] = 3
+    hash_function[(1,1)] = 4
+    hash_function[(2,1)] = 5
+    hash_function[(0,2)] = 6
+    hash_function[(1,2)] = 7
+    hash_function[(2,2)] = 8
+
+    for key in action_table:
+    	index = hash_function[key]
+    	pos[index] = propotion_table[key]
+    	pos[index + 9] = action_table[key]
+
+	print "___________________"
+    print "|%s %s|%s %s|%s %s|" % (pos[6], pos[15], pos[7], pos[16], pos[8], pos[17])
+    print "___________________"
+    print "|%s %s|%s %s|%s %s|" % (pos[3], pos[12], pos[4], pos[13], pos[5], pos[14])
+    print "___________________"
+    print "|%s %s|%s %s|%s %s|" % (pos[0], pos[9], pos[1], pos[10], pos[2], pos[11])
+    print "___________________"
+
 def print_grid(taxiloc, destination, hasPassenger):
     """
     Print the grid of boxes.
@@ -105,7 +132,7 @@ class State:
 		    legalList.append(Action.DROP)
 		    return legalList
 
-		for action in [Action.NORTH, Action.SOUTH, Action.EAST, Action.WEST]:
+		for action in [Action.NORTH, Action.SOUTH, Action.EAST, Action.WEST, Action.STAY]:
 				dx, dy = actionToVector(action)
 				x , y = self.taxiLocation
 				if x + dx < WIDTH and x + dx >= 0 and y + dy < HEIGHT and y + dy >= 0:
@@ -188,9 +215,9 @@ class World:
 				# 		if a[0] == self.state.taxiLocation and a[1] == self.state.destination:
 				# 			print  str(i) + ": " + str(self.agent.qvalues[i])
 				# print self.agent.qvalues
-				print "cruise time: " + str(float(self.cruiseTime) / float(self.numMoves))
-				
 
+				# METRICS for evaluation 
+				print "cruise time: " + str(float(self.cruiseTime) / float(self.numMoves))
 				if self.pick_up_count >= 1:
 					print "avg_drop_off_time:" + str(float(self.total_drop_offs) / float(self.pick_up_count))
 				if self.pick_up_count >= 1:
@@ -203,12 +230,16 @@ class World:
 			# NEW
 			if self.dropoffCount > 10000:
 
+
+				# calculating proportion of time agent moves to a higher state when taxi doesn't have passenger 
+				# = self.move_to_higher_location / self.num_no_passenger_moves 
 				if not self.state.taxiPassenger: 
 					self.num_no_passenger_moves += 1
 					if moved_to_higher(self.state.taxiLocation, action):
 						self.move_to_higher_location += 1
 
 				# calculating avg drop_off time 
+				# = self.total_drop_offs / self.pick_up_count 
 				self.drop_off_steps += 1
 				if action == Action.PICK:
 					self.drop_off_steps = 0
@@ -235,16 +266,6 @@ class World:
 			if not self.state.taxiPassenger:
 				self.cruiseTime += 1
 
-
-			# Evaluation function of cruistime proportion
-			
-			# if self.numMoves % 1000 == 0:
-			# 	#print self.cruiseTime
-			# 	print "cruise time: " + str(float(self.cruiseTime) / float(1000))
-			# 	self.cruiseTime = 0
-
-
-
 	def getFavoredProportion(self):
 		return float(self.favoredCount) / float(self.numMoves)
 
@@ -256,7 +277,7 @@ def moved_to_higher(loc, action):
 	print curr_val
 	print action
 	print new_val
-	if new_val > curr_val:
+	if new_val >= curr_val:
 		return True
 	else: 
 		return False 
