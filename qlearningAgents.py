@@ -13,6 +13,7 @@ class QLearningAgent(ReinforcementAgent):
         self.qvalues = util.Counter()
         self.prev_qvalues = util.Counter()
         self.isConverged = False
+        self.in_training = True
 
     def getQValue(self, state, action):
         the_state = (state.taxiLocation, state.destination, state.hasPassenger)
@@ -46,10 +47,14 @@ class QLearningAgent(ReinforcementAgent):
         legalActions = self.getLegalActions(state)
         action = None
         if not legalActions == []:
-          if util.flipCoin(self.epsilon): # Take random action
+          # NEW
+          if self.in_training:
             action = random.choice(legalActions)
-          else: # Take best action
-            action = self.computeActionFromQValues(state)
+          else: 
+            if util.flipCoin(self.epsilon): # Take random action
+              action = random.choice(legalActions)# Take best action
+            else:
+              action = self.computeActionFromQValues(state)
         return action
 
     def update(self, state, action, nextState, reward):
@@ -95,9 +100,13 @@ class QLearningAgent(ReinforcementAgent):
           max_val = -float("inf")
           max_action = None 
           for action in state.getLegalActions():
-            if self.qvalues[(state_data,action)] > max_val:
-              max_val = self.qvalues[(state_data,action)]
-              max_action = action
+            # NEW
+            key = str((state_data,action))
+            if key in self.qvalues:
+              if self.qvalues[key] > max_val:
+                print "yay"
+                max_val = self.qvalues[key]
+                max_action = action
           policies[state_data] = max_action
         return policies
 
