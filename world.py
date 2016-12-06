@@ -2,10 +2,13 @@ import random
 import copy
 import os
 import time
+import json
+import csv
+import sys
 
 # Constants
-WIDTH = 3
-HEIGHT = 3
+WIDTH = 4
+HEIGHT = 4
 PRICE = 3
 COST = -1
 
@@ -70,36 +73,61 @@ def print_grid(taxiloc, destination, hasPassenger):
 	"""
 	Print the grid of boxes.
 	"""
-	pos = [' '] * 27
+	pos = [[' ',' ',' ',' ',' ']] * (WIDTH*HEIGHT*3)
 	hash_function = {}
-	hash_function[(0,0)] = 0
-	hash_function[(1,0)] = 1
-	hash_function[(2,0)] = 2
-	hash_function[(0,1)] = 3
-	hash_function[(1,1)] = 4
-	hash_function[(2,1)] = 5
-	hash_function[(0,2)] = 6
-	hash_function[(1,2)] = 7
-	hash_function[(2,2)] = 8
+	# hash_function[(0,0)] = 0
+	# hash_function[(1,0)] = 1
+	# hash_function[(2,0)] = 2
+	# hash_function[(0,1)] = 3
+	# hash_function[(1,1)] = 4
+	# hash_function[(2,1)] = 5
+	# hash_function[(0,2)] = 6
+	# hash_function[(1,2)] = 7
+	# hash_function[(2,2)] = 8
 
+	i = 0
+	for y in range(HEIGHT):
+		for x in range(WIDTH):
+			hash_function[(x,y)] = i
+			i += 1
 	
 	if taxiloc:
-		pos[hash_function[taxiloc]] = 'T'
+		pos[hash_function[taxiloc]][0] = 'T'
 	if taxiloc and destination:
-		pos[hash_function[taxiloc]] = 'T*'
+		pos[hash_function[taxiloc]][0] = 'T*'
 	if destination:
-		pos[hash_function[destination] + 18] = 'D'
+		pos[hash_function[destination]][4] = 'D'
 	if hasPassenger:
-		pos[hash_function[taxiloc] + 9] = 'P'
+		pos[hash_function[taxiloc]][2] = 'P'
+
+	#pos[hash_function[(0,0)]][1] = 'p'
 	
 
-	print "___________________"
-	print "|%s %s %s|%s %s %s|%s %s %s|" % (pos[6], pos[15], pos[24], pos[7], pos[16], pos[25], pos[8], pos[17], pos[26])
-	print "___________________"
-	print "|%s %s %s|%s %s %s|%s %s %s|" % (pos[3], pos[12], pos[21], pos[4], pos[13], pos[22], pos[5], pos[14], pos[23])
-	print "___________________"
-	print "|%s %s %s|%s %s %s|%s %s %s|" % (pos[0], pos[9], pos[18], pos[1], pos[10], pos[19], pos[2], pos[11], pos[20])
-	print "___________________"
+	# print "___________________"
+	# print "|%s %s %s|%s %s %s|%s %s %s|" % (pos[6], pos[15], pos[24], pos[7], pos[16], pos[25], pos[8], pos[17], pos[26])
+	# print "___________________"
+	# print "|%s %s %s|%s %s %s|%s %s %s|" % (pos[3], pos[12], pos[21], pos[4], pos[13], pos[22], pos[5], pos[14], pos[23])
+	# print "___________________"
+	# print "|%s %s %s|%s %s %s|%s %s %s|" % (pos[0], pos[9], pos[18], pos[1], pos[10], pos[19], pos[2], pos[11], pos[20])
+	# print "___________________"
+
+	print taxiloc
+	print destination
+	print hasPassenger
+
+	for i in range(WIDTH * 6 + WIDTH + 1):
+		sys.stdout.write("_")
+	sys.stdout.write("\n")
+
+	for y in range(HEIGHT):
+		sys.stdout.write("|")
+		for x in range(WIDTH):
+			sys.stdout.write("".join(pos[hash_function[(x, HEIGHT - y - 1)]]) + ' |')
+		sys.stdout.write("\n")
+		for i in range(WIDTH * 6 + WIDTH + 1):
+			sys.stdout.write("_")
+		sys.stdout.write("\n")
+
 
 class Passenger:
 	def __init__(self, start, dest):
@@ -187,14 +215,62 @@ class State:
 class World:
 	def __init__(self, agent, agent_type):
 		self.agent = agent
-		self.state = State(passDist=generatePassDist())
+		self.state = State(passDist=randomPassDist())
 		self.agent_type = agent_type
+
+	def run1(self):
+		qvalues = {}
+		for key, val in csv.reader(open("output.csv")):
+			qvalues[key] = val
+		
+		self.agent.qvalues = copy.deepcopy(qvalues)
+
+		policies = self.agent.findPolicies()
+		for i in policies.keys():
+			a, b, c = i
+			if b == None and c == False:
+				self.action_table[a] = policies[i]
+		
+		while True:
+			proportion_grid(self.action_table, False)
+			print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
+			time.sleep(1.5)
+			os.system('clear')
+
+			if self.numMovesAfter10000 >= 1:
+				print "cruise time: " + str(float(self.cruiseTime) / float(self.numMovesAfter10000))
+			if self.pick_up_count >= 1:
+				print "avg_drop_off_time:" + str(float(self.total_drop_offs) / float(self.pick_up_count))
+			if self.num_no_passenger_moves >= 1:
+				print "propotion move to higher:" + str(float(self.move_to_higher_location) / float(self.num_no_passenger_moves))
+
+			action = self.agent.getAction(self.state)
+			
+			self.numMovesAfter10000 += 1
+			if not self.state.taxiPassenger: 
+				self.cruiseTime += 1
+				self.num_no_passenger_moves += 1
+				if moved_to_higher(self.state.taxiLocation, action):
+					self.move_to_higher_location += 1
+
+				# calculating avg drop_off time 
+				# = self.total_drop_offs / self.pick_up_count 
+				self.drop_off_steps += 1
+				if action == Action.PICK:
+					self.drop_off_steps = 0
+					self.pick_up_count += 1
+				if action == Action.DROP:
+					self.total_drop_offs += self.drop_off_steps
+					self.drop_off_steps = 0
+
+			nextstate = self.state.generateSuccessor(action)
+			self.state = nextstate
 
 
 	def run(self):
 		self.cruiseTime = 0
 		self.moveHistory = []
-		self.state = State(passDist=generatePassDist())
+		#self.state = State(passDist=randomPassDist())
 		self.numMoves = 0
 		self.dropoffCount = 0
 
@@ -207,8 +283,13 @@ class World:
 		self.action_table = {}
 
 		while True:
-			if (self.dropoffCount > 10000):
+			if (self.dropoffCount > 0):
 				if self.agent_type == 'Taxi':
+
+					w = csv.writer(open("output.csv", "w"))
+					for key, val in self.agent.qvalues.items():
+						w.writerow([key, val])
+					
 					policies = self.agent.findPolicies()
 					for i in policies.keys():
 							a, b, c = i
@@ -217,7 +298,7 @@ class World:
 					proportion_grid(self.action_table, False)
 				else:
 					proportion_grid({}, True)
-					
+
 				print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
 				time.sleep(1.5)
 				os.system('clear')
@@ -231,7 +312,8 @@ class World:
 				  
 
 			action = self.agent.getAction(self.state)
-			if self.dropoffCount > 10000:
+			if self.dropoffCount > 10:
+				
 				# calculating proportion of time agent moves to a higher state when taxi doesn't have passenger 
 				# = self.move_to_higher_location / self.num_no_passenger_moves 
 				# also calculating proportion of time cruising i.e time spent without passenger 
@@ -265,9 +347,6 @@ class World:
 				self.agent.observeTransition(self.state, action, nextstate, self.state.getReward(action))
 			self.state = nextstate
 
-	def getFavoredProportion(self):
-		return float(self.favoredCount) / float(self.numMoves)
-
 def moved_to_higher(loc, action):
 	passenger_dist = generatePassDist()
 	curr_val = passenger_dist[loc]
@@ -288,6 +367,13 @@ def generatePassDist():
 				(2,0): 0.5,
 				(2,1): 0.1,
 				(2,2): 0.4}
+	return passDist
+
+def randomPassDist():
+	passDist = {}
+	for x in range(WIDTH):
+		for y in range(HEIGHT):
+			passDist[(x,y)] = random.random()
 	return passDist
 
 def randomDestination(x,y):
