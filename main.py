@@ -4,8 +4,8 @@ import os
 from naiveAgents import *
 
 def main():
-	taxi = NaiveAgent()
-	world = World(taxi, 'Naive')
+	taxi = TaxiAgent()
+	world = World(taxi, 'Taxi')
 	os.system('clear')
 	world.run()
 

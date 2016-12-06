@@ -2,6 +2,8 @@ import random
 import copy
 import os
 import time
+import json
+import csv
 
 # Constants
 WIDTH = 3
@@ -190,6 +192,54 @@ class World:
 		self.state = State(passDist=generatePassDist())
 		self.agent_type = agent_type
 
+	def run1(self):
+		qvalues = {}
+		for key, val in csv.reader(open("output.csv")):
+			qvalues[key] = val
+		
+		self.agent.qvalues = copy.deepcopy(qvalues)
+
+		policies = self.agent.findPolicies()
+		for i in policies.keys():
+			a, b, c = i
+			if b == None and c == False:
+				self.action_table[a] = policies[i]
+		
+		while True:
+			proportion_grid(self.action_table, False)
+			print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
+			time.sleep(1.5)
+			os.system('clear')
+
+			if self.numMovesAfter10000 >= 1:
+				print "cruise time: " + str(float(self.cruiseTime) / float(self.numMovesAfter10000))
+			if self.pick_up_count >= 1:
+				print "avg_drop_off_time:" + str(float(self.total_drop_offs) / float(self.pick_up_count))
+			if self.num_no_passenger_moves >= 1:
+				print "propotion move to higher:" + str(float(self.move_to_higher_location) / float(self.num_no_passenger_moves))
+
+			action = self.agent.getAction(self.state)
+			
+			self.numMovesAfter10000 += 1
+			if not self.state.taxiPassenger: 
+				self.cruiseTime += 1
+				self.num_no_passenger_moves += 1
+				if moved_to_higher(self.state.taxiLocation, action):
+					self.move_to_higher_location += 1
+
+				# calculating avg drop_off time 
+				# = self.total_drop_offs / self.pick_up_count 
+				self.drop_off_steps += 1
+				if action == Action.PICK:
+					self.drop_off_steps = 0
+					self.pick_up_count += 1
+				if action == Action.DROP:
+					self.total_drop_offs += self.drop_off_steps
+					self.drop_off_steps = 0
+
+			nextstate = self.state.generateSuccessor(action)
+			self.state = nextstate
+
 
 	def run(self):
 		self.cruiseTime = 0
@@ -207,9 +257,13 @@ class World:
 		self.action_table = {}
 
 		while True:
-			if (self.dropoffCount > 10000):
-
+			if (self.dropoffCount > 10):
 				if self.agent_type == 'Taxi':
+
+					w = csv.writer(open("output.csv", "w"))
+					for key, val in self.agent.qvalues.items():
+						w.writerow([key, val])
+					
 					policies = self.agent.findPolicies()
 					for i in policies.keys():
 							a, b, c = i
@@ -218,7 +272,7 @@ class World:
 					proportion_grid(self.action_table, False)
 				else:
 					proportion_grid({}, True)
-					
+
 				print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
 				time.sleep(1.5)
 				os.system('clear')
@@ -232,7 +286,8 @@ class World:
 				  
 
 			action = self.agent.getAction(self.state)
-			if self.dropoffCount > 10000:
+			if self.dropoffCount > 10:
+				
 				# calculating proportion of time agent moves to a higher state when taxi doesn't have passenger 
 				# = self.move_to_higher_location / self.num_no_passenger_moves 
 				# also calculating proportion of time cruising i.e time spent without passenger 
@@ -265,9 +320,6 @@ class World:
 			if self.agent_type == 'Taxi':
 				self.agent.observeTransition(self.state, action, nextstate, self.state.getReward(action))
 			self.state = nextstate
-
-	def getFavoredProportion(self):
-		return float(self.favoredCount) / float(self.numMoves)
 
 def moved_to_higher(loc, action):
 	passenger_dist = generatePassDist()
