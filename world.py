@@ -208,7 +208,6 @@ class World:
 
 		while True:
 			if (self.dropoffCount > 10000):
-
 				if self.agent_type == 'Taxi':
 					policies = self.agent.findPolicies()
 					for i in policies.keys():
@@ -220,7 +219,7 @@ class World:
 					proportion_grid({}, True)
 					
 				print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
-				#time.sleep(1.5)
+				time.sleep(1.5)
 				os.system('clear')
 				
 				if self.numMovesAfter10000 >= 1:
@@ -280,15 +279,15 @@ def moved_to_higher(loc, action):
 		return False 
 
 def generatePassDist():
-	passDist = {(0,0): 0.1,
-				(0,1): 0.3,
-				(0,2): 0.5,
+	passDist = {(0,0): 0.2,
+				(0,1): 0.1,
+				(0,2): 0.2,
 				(1,0): 0.1,
-				(1,1): 0.3,
-				(1,2): 0.4,
-				(2,0): 0.7,
+				(1,1): 0.1,
+				(1,2): 0.3,
+				(2,0): 0.5,
 				(2,1): 0.1,
-				(2,2): 0.2}
+				(2,2): 0.4}
 	return passDist
 
 def randomDestination(x,y):
