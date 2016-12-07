@@ -5,6 +5,7 @@ import time
 import json
 import csv
 import sys
+import matplotlib.pyplot as plt
 
 # Constants
 WIDTH = 4
@@ -36,23 +37,14 @@ def actionToVector(action):
 	dx, dy =  Action.actions[action]
 	return (dx, dy)
 
-def proportion_grid(action_table, passDist, isNaive):
+def proportion_grid(size, action_table, passDist, isNaive):
 	proportion_table = passDist
-	pos = [[' ',' '] for i in range(WIDTH*HEIGHT*3)]
+	pos = [[' ',' '] for i in range(size*size*3)]
 	hash_function = {}
-	# hash_function[(0,0)] = 0
-	# hash_function[(1,0)] = 1
-	# hash_function[(2,0)] = 2
-	# hash_function[(0,1)] = 3
-	# hash_function[(1,1)] = 4
-	# hash_function[(2,1)] = 5
-	# hash_function[(0,2)] = 6
-	# hash_function[(1,2)] = 7
-	# hash_function[(2,2)] = 8
 
 	i = 0
-	for y in range(HEIGHT):
-		for x in range(WIDTH):
+	for y in range(size):
+		for x in range(size):
 			hash_function[(x,y)] = i
 			i += 1
 
@@ -67,37 +59,29 @@ def proportion_grid(action_table, passDist, isNaive):
 			pos[index][0] = proportion_table[key]
 			pos[index][1] = action_table[key]
 
-	# print "_________________________"
-	# print "|%s %s|%s %s|%s %s|" % (pos[6], pos[15], pos[7], pos[16], pos[8], pos[17])
-	# print "_________________________"
-	# print "|%s %s|%s %s|%s %s|" % (pos[3], pos[12], pos[4], pos[13], pos[5], pos[14])
-	# print "_________________________"
-	# print "|%s %s|%s %s|%s %s|" % (pos[0], pos[9], pos[1], pos[10], pos[2], pos[11])
-	# print "_________________________"
-
-	for i in range(WIDTH * 6 + WIDTH + 1):
+	for i in range(size * 6 + size + 1):
 		sys.stdout.write("_")
 	sys.stdout.write("\n")
 
-	for y in range(HEIGHT):
+	for y in range(size):
 		sys.stdout.write("|")
-		for x in range(WIDTH):
-			sys.stdout.write(str(pos[hash_function[(x, HEIGHT - y - 1)]]) + ' |')
+		for x in range(size):
+			sys.stdout.write(str(pos[hash_function[(x, size - y - 1)]]) + ' |')
 		sys.stdout.write("\n")
-		for i in range(WIDTH * 6 + WIDTH + 1):
+		for i in range(size * 6 + size + 1):
 			sys.stdout.write("_")
 		sys.stdout.write("\n")
 
-def print_grid(taxiloc, destination, hasPassenger):
+def print_grid(size, taxiloc, destination, hasPassenger, walls):
 	"""
 	Print the grid of boxes.
 	"""
-	pos = [[' ',' ',' ',' ',' '] for i in range(WIDTH*HEIGHT*3)]
+	pos = [[' ',' ',' ',' ',' '] for i in range(size*size*3)]
 	hash_function = {}
 
 	i = 0
-	for y in range(HEIGHT):
-		for x in range(WIDTH):
+	for y in range(size):
+		for x in range(size):
 			hash_function[(x,y)] = i
 			i += 1
 	
@@ -110,16 +94,22 @@ def print_grid(taxiloc, destination, hasPassenger):
 	if hasPassenger:
 		pos[hash_function[taxiloc]][2] = 'P'
 
-	for i in range(WIDTH * 6 + WIDTH + 1):
+	print walls
+
+	for i in range(size * 6 + size + 1):
 		sys.stdout.write("_")
 	sys.stdout.write("\n")
 
-	for y in range(HEIGHT):
+	for y in range(size):
 		sys.stdout.write("|")
-		for x in range(WIDTH):
-			sys.stdout.write("".join(pos[hash_function[(x, HEIGHT - y - 1)]]) + ' |')
+		for x in range(size):
+			sys.stdout.write("".join(pos[hash_function[(x, size - y - 1)]]))
+			if ((x, size - y - 1),(x + 1, size - y - 1)) in walls:
+				sys.stdout.write(' ||')
+			else:
+				sys.stdout.write(' |')
 		sys.stdout.write("\n")
-		for i in range(WIDTH * 6 + WIDTH + 1):
+		for i in range(size * 6 + size + 1):
 			sys.stdout.write("_")
 		sys.stdout.write("\n")
 
@@ -130,13 +120,14 @@ class Passenger:
 		self.destination = dest
 
 class State:
-	def __init__(self, prev=None, passDist=None):
+	def __init__(self, prev=None, passDist=None, walls=None):
 		self.taxiLocation = randomLocation()
 		self.taxiPassenger = None
 		self.freePassenger = None
 		self.passengerDistribution = passDist
 		self.destination = None
 		self.hasPassenger = False
+		self.walls = walls
 
 		if prev:
 			self.taxiLocation = prev.taxiLocation
@@ -145,6 +136,7 @@ class State:
 			self.freePassenger = prev.freePassenger
 			self.destination = prev.destination
 			self.hasPassenger = prev.hasPassenger
+			self.walls = prev.walls
 
 	def getLegalActions(self):
 		legalList = []
@@ -162,7 +154,8 @@ class State:
 				dx, dy = actionToVector(action)
 				x , y = self.taxiLocation
 				if x + dx < WIDTH and x + dx >= 0 and y + dy < HEIGHT and y + dy >= 0:
-					legalList.append(action)
+					if not self.walls or (self.walls and not ((x,y),(x+dx,y+dy)) in self.walls and not ((x+dx,y+dy),(x,y)) in self.walls):
+						legalList.append(action)
 		return legalList
 
 	def generateSuccessor(self, action):
@@ -210,7 +203,7 @@ class State:
 class World:
 	def __init__(self, agent, agent_type):
 		self.agent = agent
-		self.state = State(passDist=randomPassDist())
+		self.state = State(passDist=randomPassDist(), walls=randWalls())
 		self.agent_type = agent_type
 
 	def run(self):
@@ -237,7 +230,7 @@ class World:
 		
 		while True:
 			proportion_grid(self.action_table, self.state.passengerDistribution, False)
-			print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
+			print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger, self.state.walls)
 			time.sleep(1.5)
 			os.system('clear')
 
@@ -338,6 +331,18 @@ def randomDestination(x,y):
 		rand_y = random.randint(0,HEIGHT-1)
 
 	return (rand_x,rand_y)
+
+def randWalls():
+	numWalls = random.randint(0,2)
+	possible = []
+	for x in range(WIDTH):
+		for y in range(HEIGHT):
+			if x + 1 < WIDTH:
+				possible.append(((x,y),(x+1,y)))
+	walls = []
+	for i in range(numWalls):
+		walls.append(random.choice(possible))
+	return walls
 
 def manhattanDistance( xy1, xy2 ):
 	"Returns the Manhattan distance between points xy1 and xy2"
