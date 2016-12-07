@@ -5,10 +5,9 @@ import time
 import json
 import csv
 import sys
+import util
 
 # Constants
-WIDTH = 4
-HEIGHT = 4
 PRICE = 3
 COST = -1
 
@@ -36,68 +35,51 @@ def actionToVector(action):
 	dx, dy =  Action.actions[action]
 	return (dx, dy)
 
-def proportion_grid(action_table, passDist, isNaive):
+def proportion_grid(size, action_table, passDist, isNaive):
 	proportion_table = passDist
-	pos = [[' ',' '] for i in range(WIDTH*HEIGHT*3)]
+	pos = [[' ',' '] for i in range(size*size*3)]
 	hash_function = {}
-	# hash_function[(0,0)] = 0
-	# hash_function[(1,0)] = 1
-	# hash_function[(2,0)] = 2
-	# hash_function[(0,1)] = 3
-	# hash_function[(1,1)] = 4
-	# hash_function[(2,1)] = 5
-	# hash_function[(0,2)] = 6
-	# hash_function[(1,2)] = 7
-	# hash_function[(2,2)] = 8
 
 	i = 0
-	for y in range(HEIGHT):
-		for x in range(WIDTH):
+	for y in range(size):
+		for x in range(size):
 			hash_function[(x,y)] = i
 			i += 1
 
 	if  isNaive:
 		for key in hash_function.keys():
 			i = hash_function[key]
-			pos[i][0] = proportion_table[key]
+			pos[i][0] = float("{0:.2f}".format(proportion_table[key]))
 			pos[i][1] = ' '
 	else:
 		for key in action_table:
 			index = hash_function[key]
-			pos[index][0] = proportion_table[key]
+			pos[index][0] = float("{0:.2f}".format(proportion_table[key]))
 			pos[index][1] = action_table[key]
 
-	# print "_________________________"
-	# print "|%s %s|%s %s|%s %s|" % (pos[6], pos[15], pos[7], pos[16], pos[8], pos[17])
-	# print "_________________________"
-	# print "|%s %s|%s %s|%s %s|" % (pos[3], pos[12], pos[4], pos[13], pos[5], pos[14])
-	# print "_________________________"
-	# print "|%s %s|%s %s|%s %s|" % (pos[0], pos[9], pos[1], pos[10], pos[2], pos[11])
-	# print "_________________________"
-
-	for i in range(WIDTH * 6 + WIDTH + 1):
+	for i in range(size * 6 + size + 1):
 		sys.stdout.write("_")
 	sys.stdout.write("\n")
 
-	for y in range(HEIGHT):
+	for y in range(size):
 		sys.stdout.write("|")
-		for x in range(WIDTH):
-			sys.stdout.write(str(pos[hash_function[(x, HEIGHT - y - 1)]]) + ' |')
+		for x in range(size):
+			sys.stdout.write(str(pos[hash_function[(x, size - y - 1)]]) + ' |')
 		sys.stdout.write("\n")
-		for i in range(WIDTH * 6 + WIDTH + 1):
+		for i in range(size * 6 + size + 1):
 			sys.stdout.write("_")
 		sys.stdout.write("\n")
 
-def print_grid(taxiloc, destination, hasPassenger):
+def print_grid(size, taxiloc, destination, hasPassenger):
 	"""
 	Print the grid of boxes.
 	"""
-	pos = [[' ',' ',' ',' ',' '] for i in range(WIDTH*HEIGHT*3)]
+	pos = [[' ',' ',' ',' ',' '] for i in range(size*size*3)]
 	hash_function = {}
 
 	i = 0
-	for y in range(HEIGHT):
-		for x in range(WIDTH):
+	for y in range(size):
+		for x in range(size):
 			hash_function[(x,y)] = i
 			i += 1
 	
@@ -110,16 +92,16 @@ def print_grid(taxiloc, destination, hasPassenger):
 	if hasPassenger:
 		pos[hash_function[taxiloc]][2] = 'P'
 
-	for i in range(WIDTH * 6 + WIDTH + 1):
+	for i in range(size * 6 + size + 1):
 		sys.stdout.write("_")
 	sys.stdout.write("\n")
 
-	for y in range(HEIGHT):
+	for y in range(size):
 		sys.stdout.write("|")
-		for x in range(WIDTH):
-			sys.stdout.write("".join(pos[hash_function[(x, HEIGHT - y - 1)]]) + ' |')
+		for x in range(size):
+			sys.stdout.write("".join(pos[hash_function[(x, size - y - 1)]]) + ' |')
 		sys.stdout.write("\n")
-		for i in range(WIDTH * 6 + WIDTH + 1):
+		for i in range(size * 6 + size + 1):
 			sys.stdout.write("_")
 		sys.stdout.write("\n")
 
@@ -130,8 +112,9 @@ class Passenger:
 		self.destination = dest
 
 class State:
-	def __init__(self, prev=None, passDist=None):
-		self.taxiLocation = randomLocation()
+	def __init__(self, ssize=4, prev=None, passDist=None):
+		self.ssize = ssize
+		self.taxiLocation = randomLocation(self.ssize)
 		self.taxiPassenger = None
 		self.freePassenger = None
 		self.passengerDistribution = passDist
@@ -145,6 +128,7 @@ class State:
 			self.freePassenger = prev.freePassenger
 			self.destination = prev.destination
 			self.hasPassenger = prev.hasPassenger
+			self.ssize = prev.ssize
 
 	def getLegalActions(self):
 		legalList = []
@@ -161,12 +145,12 @@ class State:
 		for action in [Action.NORTH, Action.SOUTH, Action.EAST, Action.WEST, Action.STAY]:
 				dx, dy = actionToVector(action)
 				x , y = self.taxiLocation
-				if x + dx < WIDTH and x + dx >= 0 and y + dy < HEIGHT and y + dy >= 0:
+				if x + dx < self.ssize and x + dx >= 0 and y + dy < self.ssize and y + dy >= 0:
 					legalList.append(action)
 		return legalList
 
 	def generateSuccessor(self, action):
-		state = State(self)
+		state = State(prev=self)
 		x, y = state.taxiLocation
 		dx, dy = actionToVector(action)
 		state.taxiLocation = (x + dx, y + dy)
@@ -202,15 +186,16 @@ class State:
 		x, y = location
 		rand = random.random()
 		if rand < self.passengerDistribution[(x,y)]:
-			passenger = Passenger((x,y), randomDestination(x,y))
+			passenger = Passenger((x,y), randomDestination(x,y, self.ssize))
 			return passenger
 		else:
 			return None
 
 class World:
-	def __init__(self, agent, agent_type):
+	def __init__(self, agent, agent_type, size=4):
 		self.agent = agent
-		self.state = State(passDist=randomPassDist())
+		self.wsize = int(size) 
+		self.state = State(ssize=self.wsize, passDist=randomPassDist(self.wsize))
 		self.agent_type = agent_type
 
 	def run(self):
@@ -223,21 +208,20 @@ class World:
 		self.action_table = {}
 		self.cruiseTime = 0
 
-		qvalues = {}
+		qvalues = util.Counter()
 		for key, val in csv.reader(open("output.csv")):
 			qvalues[key] = val
-		print self.agent.qvalues
 		self.agent.qvalues = copy.deepcopy(qvalues)
 
-		policies = self.agent.findPolicies(WIDTH, HEIGHT)
+		policies = self.agent.findPolicies(self.wsize)
 		for i in policies.keys():
 			a, b, c = i
 			if b == None and c == False:
 				self.action_table[a] = policies[i]
 		
 		while True:
-			proportion_grid(self.action_table, self.state.passengerDistribution, False)
-			print_grid(self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
+			proportion_grid(self.wsize, self.action_table, self.state.passengerDistribution, False)
+			print_grid(self.wsize, self.state.taxiLocation, self.state.destination, self.state.hasPassenger)
 			time.sleep(1.5)
 			os.system('clear')
 
@@ -272,16 +256,21 @@ class World:
 					self.drop_off_steps = 0
 
 			nextstate = self.state.generateSuccessor(action)
+			self.agent.observeTransition(self.state, action, nextstate, self.state.getReward(action))
 			self.state = nextstate
 
 	def train(self):
 		self.numMoves = 0
 		self.dropoffCount = 0
 
+		if os.path.isfile("output.csv"):
+			os.remove("output.csv") # delete output file 
+
 		while True:
-			if (self.dropoffCount > 10000):
+			if (self.dropoffCount > 10):
 				if self.agent_type == 'Taxi':
 					w = csv.writer(open("output.csv", "w"))
+					w.writerow(['size', self.wsize]) # saves size to output file 
 					for key, val in self.agent.qvalues.items():
 						w.writerow([key, val])
 					self.agent.in_training = False
@@ -309,33 +298,26 @@ def moved_to_higher(loc, action, passDist):
 	else: 
 		return False 
 
-def generatePassDist():
-	passDist = {(0,0): 0.2,
-				(0,1): 0.1,
-				(0,2): 0.2,
-				(1,0): 0.1,
-				(1,1): 0.1,
-				(1,2): 0.3,
-				(2,0): 0.5,
-				(2,1): 0.1,
-				(2,2): 0.4}
-	return passDist
+def randomLocation(size):
+	rand_x = random.randint(0,size-1)
+	rand_y = random.randint(0,size-1)
+	return (rand_x,rand_y)
 
-def randomPassDist():
+def randomPassDist(size):
 	passDist = {}
-	for x in range(WIDTH):
-		for y in range(HEIGHT):
+	for x in range(size):
+		for y in range(size):
 			passDist[(x,y)] = random.random()
 	return passDist
 
-def randomDestination(x,y):
-	rand_x = random.randint(0,WIDTH-1)
+def randomDestination(x,y,size):
+	rand_x = random.randint(0,size-1)
 	while rand_x == x:
-		rand_x = random.randint(0,WIDTH-1)
+		rand_x = random.randint(0,size-1)
 
-	rand_y = random.randint(0,HEIGHT-1)
+	rand_y = random.randint(0,size-1)
 	while rand_y == y:
-		rand_y = random.randint(0,HEIGHT-1)
+		rand_y = random.randint(0,size-1)
 
 	return (rand_x,rand_y)
 
@@ -343,10 +325,7 @@ def manhattanDistance( xy1, xy2 ):
 	"Returns the Manhattan distance between points xy1 and xy2"
 	return abs( xy1[0] - xy2[0] ) + abs( xy1[1] - xy2[1] )
 
-def randomLocation():
-	rand_x = random.randint(0,WIDTH-1)
-	rand_y = random.randint(0,HEIGHT-1)
-	return (rand_x,rand_y)
+
 
 
 

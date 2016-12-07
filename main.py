@@ -3,21 +3,31 @@ from qlearningAgents import TaxiAgent
 import os
 from naiveAgents import *
 import os.path 
+import sys 
 
 def main():
 	taxi = TaxiAgent()
-	world = World(taxi, 'Taxi')
-
 	os.system('clear')
-	if os.path.isfile("output.csv"):
-		print "yay2"
-		print taxi.in_training
+	if len(sys.argv) == 1: #python main.py
+		if os.path.isfile("output.csv"):
+			size = 0
+			for key, val in csv.reader(open("output.csv")):
+				if key == 'size':
+					size = int(val)
+					break
+			world = World(taxi, 'Taxi', size)
+			world.run()
+		else:
+			world = World(taxi, 'Taxi')
+			world.train()
+			world.run()
+	elif len(sys.argv) == 2: # python main.py size 
+		world = World(taxi, 'Taxi', sys.argv[1])
+		world.train()
 		world.run()
 	else:
-		print "yay"
-		print taxi.in_training
-		world.train()
-		# world.run()
-	
+		print "Must be of this format: python main.py SIZE"
+		print "SIZE is the size of the grid"
 
 main()
+

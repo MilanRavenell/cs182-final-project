@@ -17,7 +17,11 @@ class QLearningAgent(ReinforcementAgent):
 
     def getQValue(self, state, action):
         the_state = (state.taxiLocation, state.destination, state.hasPassenger)
-        return self.qvalues[(the_state, action)]
+        if self.in_training:
+          return self.qvalues[(the_state, action)]
+        else:
+          key = str((the_state, action))
+          return float(self.qvalues[key])
 
     def computeValueFromQValues(self, state):
         if len(self.getLegalActions(state)) == 0:
@@ -47,7 +51,6 @@ class QLearningAgent(ReinforcementAgent):
         legalActions = self.getLegalActions(state)
         action = None
         if not legalActions == []:
-          # NEW
           if self.in_training:
             action = random.choice(legalActions)
           else: 
@@ -68,18 +71,21 @@ class QLearningAgent(ReinforcementAgent):
         """
         self.prev_qvalues = copy.copy(self.qvalues)
         the_state = (state.taxiLocation, state.destination, state.hasPassenger)
-        self.qvalues[(the_state, action)] = (1 - self.alpha) * self.getQValue(state, action) + (self.alpha) * (reward + (self.discount * self.computeValueFromQValues(nextState)))
-        self.converges(0)
-
+        if self.in_training:
+          key = (the_state, action)
+        else:
+          key = str((the_state, action))
+        self.qvalues[key] = (1 - self.alpha) * self.getQValue(state, action) + (self.alpha) * (reward + (self.discount * self.computeValueFromQValues(nextState)))
+        
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
 
     def getValue(self, state):
         return self.computeValueFromQValues(state)
 
-    def findPolicies(self, width, height):
-        a = [i for i in range(width)]
-        b = [i for i in range(height)]
+    def findPolicies(self, size):
+        a = [i for i in range(size)]
+        b = [i for i in range(size)]
         states = list(itertools.product(a, b))
         passenger = copy.copy(states)
         list(passenger)
@@ -104,13 +110,10 @@ class QLearningAgent(ReinforcementAgent):
           max_val = -float("inf")
           max_action = None 
           for action in state.getLegalActions():
-            # NEW
-            key = str((state_data,action))
-            if key in self.qvalues:
-              if self.qvalues[key] > max_val:
-                print "yay"
-                max_val = self.qvalues[key]
-                max_action = action
+            key = str((state_data, action))
+            if self.qvalues[key] > max_val:
+              max_val = self.qvalues[key]
+              max_action = action
           policies[state_data] = max_action
         return policies
 
