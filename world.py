@@ -275,7 +275,8 @@ class World:
 			os.remove("output.csv") # delete output file 
 
 		while True:
-			if (self.dropoffCount > 10):
+			if self.agent.isConverged:
+				print self.dropoffCount
 				if self.agent_type == 'Taxi':
 					w = csv.writer(open("output.csv", "w"))
 					w.writerow(['size', self.wsize]) # saves size to output file 
@@ -295,6 +296,11 @@ class World:
 			if self.agent_type == 'Taxi':
 				self.agent.observeTransition(self.state, action, nextstate, self.state.getReward(action))
 			self.state = nextstate
+
+			if self.numMoves % 1000 == 0:
+				print self.numMoves
+
+
 
 def moved_to_higher(loc, action, passDist):
 	passenger_dist = passDist
