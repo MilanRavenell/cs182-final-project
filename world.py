@@ -139,6 +139,7 @@ class State:
 
 	def getLegalActions(self):
 		legalList = []
+		
 		# if passeger is at grid location, TaxiAgent's action should be PICK UP
 		if self.freePassenger and not self.taxiPassenger:
 			legalList.append(Action.PICK)
@@ -284,24 +285,18 @@ class World:
 		while True:
 			if self.agent.isConverged:
 				print self.dropoffCount
-			if (self.dropoffCount > 1000):
-				
-				
 				plt.plot(self.cruise_time_list)
 				plt.ylabel('Average Cruise Time')
-				#plt.axis([0, 10000, 0, 1])
 				plt.show()
-				time.sleep(5.5)
+				time.sleep(2.5)
 				plt.close()
 
 				plt.plot(self.proportion_grid_list)
 				plt.ylabel('Average Proportion Time')
-				#plt.axis([0, 10000, 0, 1])
 				plt.show()
-				time.sleep(5.5)
+				time.sleep(2.5)
 				plt.close()
 				
-				print "YAY"
 				if self.agent_type == 'Taxi':
 					w = csv.writer(open("output.csv", "w"))
 					w.writerow(['size', self.wsize]) # saves size to output file 
