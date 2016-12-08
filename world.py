@@ -210,11 +210,11 @@ class World:
 		self.pick_up_count = 0
 		self.total_drop_offs = 0
 		self.drop_off_steps = 0
-		self.move_to_higher_location = 0
-		self.num_no_passenger_moves = 0
+		self.move_to_higher_location_trained = 0
+		self.num_no_passenger_moves_trained = 0
 		self.numMovesAfter10000 = 0
 		self.action_table = {}
-		self.cruiseTime = 0
+		self.cruise_time_trained = 0
 
 		qvalues = util.Counter()
 		for key, val in csv.reader(open("output.csv")):
@@ -234,11 +234,11 @@ class World:
 			os.system('clear')
 
 			if self.numMovesAfter10000 >= 1:
-				print "cruise time: " + str(float(self.cruiseTime) / float(self.numMovesAfter10000))
+				print "cruise time: " + str(float(self.cruise_time_trained) / float(self.numMovesAfter10000))
 			if self.pick_up_count >= 1:
 				print "avg_drop_off_time:" + str(float(self.total_drop_offs) / float(self.pick_up_count))
-			if self.num_no_passenger_moves >= 1:
-				print "propotion move to higher:" + str(float(self.move_to_higher_location) / float(self.num_no_passenger_moves))
+			if self.num_no_passenger_moves_trained >= 1:
+				print "propotion move to higher:" + str(float(self.move_to_higher_location_trained) / float(self.num_no_passenger_moves_trained))
 
 			action = self.agent.getAction(self.state)
 			
@@ -248,10 +248,10 @@ class World:
 			# = self.cruiseTime / self.numMoves10000
 			self.numMovesAfter10000 += 1
 			if not self.state.taxiPassenger: 
-				self.cruiseTime += 1
-				self.num_no_passenger_moves += 1
+				self.cruise_time_trained += 1
+				self.num_no_passenger_moves_trained += 1
 				if moved_to_higher(self.state.taxiLocation, action, self.state.passengerDistribution):
-					self.move_to_higher_location += 1
+					self.move_to_higher_location_trained += 1
 
 				# calculating avg drop_off time 
 				# = self.total_drop_offs / self.pick_up_count 
@@ -270,6 +270,13 @@ class World:
 	def train(self):
 		self.numMoves = 0
 		self.dropoffCount = 0
+		self.cruiseTime = 0
+		self.move_to_higher_location = 0
+		self.num_no_passenger_moves = 0
+		self.cruise_time_list = []
+		self.proportion_grid_list = []
+		self.x_axis = []
+
 
 		if os.path.isfile("output.csv"):
 			os.remove("output.csv") # delete output file 
@@ -277,6 +284,24 @@ class World:
 		while True:
 			if self.agent.isConverged:
 				print self.dropoffCount
+			if (self.dropoffCount > 1000):
+				
+				
+				plt.plot(self.cruise_time_list)
+				plt.ylabel('Average Cruise Time')
+				#plt.axis([0, 10000, 0, 1])
+				plt.show()
+				time.sleep(5.5)
+				plt.close()
+
+				plt.plot(self.proportion_grid_list)
+				plt.ylabel('Average Proportion Time')
+				#plt.axis([0, 10000, 0, 1])
+				plt.show()
+				time.sleep(5.5)
+				plt.close()
+				
+				print "YAY"
 				if self.agent_type == 'Taxi':
 					w = csv.writer(open("output.csv", "w"))
 					w.writerow(['size', self.wsize]) # saves size to output file 
@@ -286,8 +311,20 @@ class World:
 					return
 				
 			action = self.agent.getAction(self.state)
+
 			self.numMoves += 1
 			
+			if not self.state.taxiPassenger: 
+				self.cruiseTime += 1
+				self.num_no_passenger_moves += 1
+				if moved_to_higher(self.state.taxiLocation, action, self.state.passengerDistribution):
+					self.move_to_higher_location += 1
+			
+			if self.numMoves % 1000 == 0:
+				self.cruise_time_list.append(float(self.cruiseTime) / float(self.numMoves))
+				self.proportion_grid_list.append(float(self.move_to_higher_location) / float(self.num_no_passenger_moves))
+				self.x_axis.append(self.numMoves)
+
 			if action == Action.DROP:
 				self.dropoffCount += 1
 						
