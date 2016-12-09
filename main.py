@@ -25,9 +25,15 @@ def main():
 		world = World(taxi, 'Taxi', sys.argv[1])
 		world.train()
 		world.run()
+	elif len(sys.argv) == 3: # python main.py size 
+		world = World(taxi, 'Taxi', sys.argv[1], sys.argv[2])
+		#world.train()
+		#world.run()
+		world.runNaive()
 	else:
-		print "Must be of this format: python main.py SIZE"
+		print "Must be of this format: python main.py SIZE DIR"
 		print "SIZE is the size of the grid"
+		print "DIR is directory of output files"
 
 main()
 

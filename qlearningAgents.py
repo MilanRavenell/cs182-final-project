@@ -69,8 +69,8 @@ class QLearningAgent(ReinforcementAgent):
                   action = act
           else: 
             if util.flipCoin(self.epsilon): # Take random action
-              action = random.choice(legalActions)# Take best action
-            else:
+              action = random.choice(legalActions)
+            else: # Take best action
               action = self.computeActionFromQValues(state)
         return action
 
@@ -140,12 +140,10 @@ class QLearningAgent(ReinforcementAgent):
     def converges(self):
       for key in self.policies.keys():
         if not self.prev_policies or (self.policies[key] != self.prev_policies[key]):
-          print "hi"
           self.convergeCount = 0
           return
       self.convergeCount += 1
-      print 'converge count: ' + str(self.convergeCount)
-      if self.convergeCount >= 100:
+      if self.convergeCount >= 150:
         self.isConverged = True
 
 
