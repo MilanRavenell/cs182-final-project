@@ -27,9 +27,10 @@ def main():
 		world.run()
 	elif len(sys.argv) == 3: # python main.py size 
 		world = World(taxi, 'Taxi', sys.argv[1], sys.argv[2])
-		#world.train()
-		#world.run()
-		world.runNaive()
+		world.train()
+		world.run()
+		# Run this if you want to compare the results to a Naive agent
+		# world.runNaive()
 	else:
 		print "Must be of this format: python main.py SIZE DIR"
 		print "SIZE is the size of the grid"

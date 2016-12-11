@@ -133,7 +133,7 @@ class Passenger:
 		self.destination = dest
 
 class State:
-	def __init__(self, ssize=4, prev=None, passDist=None, walls=None):
+	def __init__(self, ssize=3, prev=None, passDist=None, walls=None):
 		self.ssize = ssize
 		self.taxiLocation = randomLocation(self.ssize)
 		self.taxiPassenger = None
@@ -291,7 +291,6 @@ class World:
 				self.f.write("convergence steps: " + str(self.numMoves) + "\n")
 				self.f.close()
 
-				#self.runNaive()
 
 			action = self.agent.getAction(self.state)
 
@@ -440,7 +439,7 @@ def randomPassDist(size):
 	passDist = {}
 	for x in range(size):
 		for y in range(size):
-			passDist[(x,y)] = random.uniform(0,0.5)
+			passDist[(x,y)] = random.uniform(0,1)
 	return passDist
 
 def randomDestination(x,y,size):
