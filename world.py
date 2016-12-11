@@ -291,8 +291,7 @@ class World:
 				self.f.write("convergence steps: " + str(self.numMoves) + "\n")
 				self.f.close()
 
-				self.runNaive()
-				return
+				#self.runNaive()
 
 			action = self.agent.getAction(self.state)
 
